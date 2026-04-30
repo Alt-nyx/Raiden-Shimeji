@@ -1,8 +1,11 @@
 # Raiden Shimeji ⚡
 
+Un petit compagnon de bureau (Shimeji) inspiré par Raiden, qui se balade sur votre écran ! Ce projet est développé en Java.
 
+## 🚀 Installation & Lancement
 
-## Comment lancer (Linux)
-1. Télécharge le dossier.
-2. Dans un terminal, donne les permissions : `chmod +x Lancer_Raiden.sh`
-3. Lance avec : `./Lancer_Raiden.sh`
+### Pour Linux
+1. **Télécharge** le dépôt ou clone-le.
+2. Ouvre un terminal dans le dossier et rends le script exécutable :
+   ```bash
+   chmod +x Lancer_Raiden.sh
