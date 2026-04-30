@@ -4,7 +4,7 @@ Un petit compagnon de bureau (Shimeji) inspiré par Raiden, qui se balade sur vo
 
 ## 🚀 Installation & Lancement
 
-### Pour Linux (Recommandé pour ton collègue)
+### Pour Linux
 1. **Télécharge** le dépôt ou clone-le.
 2. Ouvre un terminal dans le dossier et rends le script exécutable :
    ```bash
