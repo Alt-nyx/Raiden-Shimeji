@@ -11,7 +11,7 @@ public class RaidenMini extends JWindow {
     private JLabel label;
 
     private final int IMAGE_SIZE = 360;
-    private final int DECALAGE_SOL_BASE = 325; // Base ajustée pour éviter la barre des tâches[cite: 1]
+    private final int DECALAGE_SOL_BASE = 325; // Base ajustée pour éviter la barre des tâches
 
     public RaidenMini() {
         setBackground(new Color(0, 0, 0, 0));
