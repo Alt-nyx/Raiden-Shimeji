@@ -22,6 +22,8 @@ public class RaidenMini extends JFrame {
     
     private JLabel label;
     private List<JWindow> menuButtons = new ArrayList<>();
+    private List<ImageIcon> framesCache = new ArrayList<>(); 
+    private int lastFrameRendered = -1;
 
     public RaidenMini() {
         countImages();
@@ -108,6 +110,11 @@ public class RaidenMini extends JFrame {
                 }
             }
         });
+
+        JPanel clickPanel = new JPanel(new BorderLayout());
+        clickPanel.setOpaque(false);
+        clickPanel.setDoubleBuffered(true);
+        add(clickPanel);
 
         new Timer(150, e -> { 
             if (!state.equals("EXIT")) { // On stop la logique si elle est en train de partir
@@ -269,7 +276,13 @@ public class RaidenMini extends JFrame {
         File dir = new File("img/");
         if (dir.exists() && dir.isDirectory()) {
             File[] files = dir.listFiles((d, name) -> name.startsWith("shime") && name.endsWith(".png"));
-            totalImages = (files != null) ? files.length : 0;
+            if (files != null) {
+                totalImages = files.length;
+                framesCache.clear();
+                for (int i = 1; i <= totalImages; i++) {
+                    framesCache.add(new ImageIcon("img/shime" + i + ".png"));
+                }
+            }
         }
     }
 
@@ -286,10 +299,16 @@ public class RaidenMini extends JFrame {
 
     private void updateUIFrame() {
         if (frame > totalImages && totalImages > 0) frame = 1;
-        label.setIcon(new ImageIcon("img/shime" + frame + ".png"));
+        if (frame != lastFrameRendered && !framesCache.isEmpty()) {
+            label.setIcon(framesCache.get(frame - 1));
+            lastFrameRendered = frame;
+        }
     }
 
     public static void main(String[] args) {
+        System.setProperty("sun.java2d.opengl", "true");
+        System.setProperty("sun.java2d.xrender", "false");
+        
         SwingUtilities.invokeLater(RaidenMini::new);
     }
 }
