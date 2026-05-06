@@ -63,8 +63,9 @@ public class RaidenMini extends JFrame {
         new Timer(150, e -> { 
     if (!state.equals("EXIT")) {
         applyLogic(); 
-        updateUIFrame();
-        label.repaint();
+        updateUIFrame(); 
+    setVisible(true);
+    x = getX(); y = getY();
     }
 }).start();
 
@@ -241,14 +242,15 @@ public class RaidenMini extends JFrame {
     }
 
     public static void main(String[] args) {
-    // Désactive les pipelines qui bloquent la transparence sur Linux
+    // Désactive l'accélération qui cache les images sur certaines cartes Linux
     System.setProperty("sun.java2d.opengl", "false");
     System.setProperty("sun.java2d.xrender", "false");
 
     SwingUtilities.invokeLater(() -> {
         RaidenMini rm = new RaidenMini();
-        // Force le rafraîchissement de la transparence
-        rm.repaint(); 
+        // Force la fenêtre à être "cliquable" et visible
+        rm.setVisible(true);
+        rm.repaint();
     });
 }
 }
