@@ -27,6 +27,7 @@ public class RaidenMini extends JFrame {
         setAlwaysOnTop(true);
         setSize(IMAGE_SIZE, IMAGE_SIZE);
         setLocationRelativeTo(null);
+        setFocusableWindowState(false);
         setTitle("RaidenMini");
         
         ((JPanel)getContentPane()).setOpaque(false);
@@ -69,7 +70,11 @@ public class RaidenMini extends JFrame {
 
         setVisible(true);
         x = getX(); y = getY();
-    }
+
+        try {
+            Runtime.getRuntime().exec("hyprctl keyword windowrule noborder,RaidenMini");
+        } catch (Exception e) {} 
+    } 
 
     private void countImages() {
         File dir = new File("img/");
@@ -233,13 +238,13 @@ public class RaidenMini extends JFrame {
     }
 
     public static void main(String[] args) {
-        // Paramètres de rendu pour Hyprland
-        System.setProperty("sun.java2d.xrender", "true");
-        System.setProperty("sun.java2d.opengl", "false");
+    System.setProperty("sun.java2d.xrender", "true");
+    System.setProperty("sun.java2d.opengl", "false");
 
-        SwingUtilities.invokeLater(() -> {
-            RaidenMini rm = new RaidenMini();
-            rm.setVisible(true);
-        });
-    }
+    SwingUtilities.invokeLater(() -> {
+        RaidenMini rm = new RaidenMini();
+        // Optionnel : force encore un coup le "sans ombre"
+        rm.getRootPane().putClientProperty("Window.shadow", Boolean.FALSE);
+    });
+}
 }
