@@ -240,9 +240,8 @@ public class RaidenMini extends JFrame {
     }
 
     public static void main(String[] args) {
-    System.setProperty("sun.java2d.opengl", "false");
-    System.setProperty("sun.java2d.xrender", "false"); 
-
+    System.setProperty("sun.java2d.opengl", "true");
+    
     SwingUtilities.invokeLater(() -> {
         RaidenMini rm = new RaidenMini();
         rm.getRootPane().putClientProperty("Window.shadow", Boolean.FALSE);
