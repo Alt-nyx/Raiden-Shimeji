@@ -232,7 +232,7 @@ public class RaidenMini extends JFrame {
     public static void main(String[] args) {
     // Optimisations pour supprimer le fond noir sur Wayland
     System.setProperty("sun.java2d.opengl", "false"); // On coupe l'OpenGL pour Linux
-    System.setProperty("sun.java2d.xrender", "true"); 
+    System.setProperty("sun.java2d.xrender", "false"); 
     System.setProperty("sun.java2d.noddraw", "true");
     
     SwingUtilities.invokeLater(RaidenMini::new);
