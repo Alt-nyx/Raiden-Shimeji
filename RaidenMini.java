@@ -32,6 +32,7 @@ public class RaidenMini extends JFrame {
         ((JPanel)getContentPane()).setOpaque(false);
         getContentPane().setBackground(new Color(0, 0, 0, 0));
         getContentPane().setLayout(new BorderLayout());
+        getRootPane().setWindowDecorationStyle(JRootPane.NONE);
         getRootPane().setDoubleBuffered(true);
 
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -204,7 +205,7 @@ public class RaidenMini extends JFrame {
             btn.setLocation(getX()+180 + (int)(Math.cos(angle)*150)-25, getY()+180 + (int)(Math.sin(angle)*145)-25);
 
             JLabel l = new JLabel(new ImageIcon(new ImageIcon(icons[i]).getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH)));
-            btn.add(l); btn.setSize(50, 50); btn.setAlwaysOnTop(true); btn.setVisible(true);
+            btn.add(l); btn.setSize(50, 50); btn.setAlwaysOnTop(true); btn.setVisible(true); btn.toFront();
             l.addMouseListener(new MouseAdapter() {
                 @Override public void mousePressed(MouseEvent e) {
                     targetState = cible;
