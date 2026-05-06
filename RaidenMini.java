@@ -5,49 +5,39 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-/* RaidenMini - Mascotte de bureau interactive optimisée */
 public class RaidenMini extends JFrame {
-    // Configuration et état
     private int x, y, frame = 1, animStep = 0, totalImages = 0;
     private final int IMAGE_SIZE = 360, DECALAGE_SOL_BASE = 325;
     private boolean isDragging = false, hasMoved = false;
     private String state = "IDLE", lastState = "IDLE", targetState = ""; 
     
-    // Composants et Cache
     private JLabel label;
     private List<JWindow> menuButtons = new ArrayList<>();
     private List<ImageIcon> framesCache = new ArrayList<>(); 
     private int lastFrameRendered = -1;
 
     public RaidenMini() {
-        countImages(); // Chargement initial des images en RAM
+        countImages(); 
         
-        // Configuration de la fenêtre transparente
         setUndecorated(true);
-        // Supprime toute autre ligne "setType" et garde celle-ci :
         setType(java.awt.Window.Type.UTILITY); 
         setBackground(new Color(0, 0, 0, 0));
         setAlwaysOnTop(true);
         setSize(IMAGE_SIZE, IMAGE_SIZE);
         setLocationRelativeTo(null);
         setTitle("RaidenMini");
-        setIconImage(new ImageIcon("img/shime0.png").getImage());
         
-        ((JPanel)getContentPane()).setBackground(new Color(0, 0, 0, 0));
+        // Configuration de la transparence
+        ((JPanel)getContentPane()).setOpaque(false);
         getContentPane().setBackground(new Color(0, 0, 0, 0));
         getContentPane().setLayout(new BorderLayout());
-
-        // Anti-scintillement radical : On configure le rafraîchissement manuel
         getRootPane().setDoubleBuffered(true);
-        ((JPanel)getContentPane()).setOpaque(false);
 
-        // Intercepter la fermeture pour la tête triste
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
             @Override public void windowClosing(WindowEvent e) { exitSequence(); }
         });
 
-        // Panel principal avec Double Buffering activé
         JPanel clickPanel = new JPanel(new BorderLayout());
         clickPanel.setOpaque(false);
         clickPanel.setDoubleBuffered(true); 
@@ -57,60 +47,55 @@ public class RaidenMini extends JFrame {
         label.setHorizontalAlignment(SwingConstants.CENTER);
         clickPanel.add(label, BorderLayout.CENTER);
 
-        setupInteractions(clickPanel); // Configuration souris et menu
+        setupInteractions(clickPanel);
 
-        // Timer principal (Boucle de jeu)
-        new Timer(150, e -> { 
-    if (!state.equals("EXIT")) {
-        applyLogic(); 
+        // --- IMPORTANT : Charger la première image AVANT d'afficher ---
         updateUIFrame(); 
-    setVisible(true);
-    x = getX(); y = getY();
-    }
-}).start();
+
+        // Timer principal nettoyé
+        new Timer(150, e -> { 
+            if (!state.equals("EXIT")) {
+                applyLogic(); 
+                updateUIFrame(); 
+                // On ne remet PAS setVisible(true) ici !
+            }
+        }).start();
 
         setVisible(true);
         x = getX(); y = getY();
     }
 
-    // --- LOGIQUE D'AFFICHAGE & CACHE ---
-
     private void countImages() {
-    File dir = new File("img/");
-    System.out.println("Recherche dans : " + dir.getAbsolutePath()); // Debug
-    if (dir.exists() && dir.isDirectory()) {
-        File[] files = dir.listFiles((d, name) -> name.startsWith("shime") && name.endsWith(".png"));
-        if (files != null) {
-            totalImages = files.length;
-            System.out.println("Images trouvées : " + totalImages); // Debug
-            framesCache.clear();
-            for (int i = 1; i <= totalImages; i++) {
-                framesCache.add(new ImageIcon("img/shime" + i + ".png"));
+        File dir = new File("img/");
+        if (dir.exists() && dir.isDirectory()) {
+            File[] files = dir.listFiles((d, name) -> name.startsWith("shime") && name.endsWith(".png"));
+            if (files != null) {
+                totalImages = files.length;
+                framesCache.clear();
+                for (int i = 1; i <= totalImages; i++) {
+                    framesCache.add(new ImageIcon("img/shime" + i + ".png"));
+                }
             }
         }
-    } else {
-        System.out.println("ERREUR : Dossier img/ introuvable !");
     }
-}
 
     private void updateUIFrame() {
-    if (totalImages == 0) return; 
-    if (frame > totalImages) frame = 1;
+        if (totalImages == 0 || framesCache.isEmpty()) return; 
+        if (frame > totalImages) frame = 1;
 
-    if (frame != lastFrameRendered && !framesCache.isEmpty()) {
-        label.setIcon(framesCache.get(frame - 1));
-        lastFrameRendered = frame;
-        label.revalidate(); 
+        if (frame != lastFrameRendered) {
+            label.setIcon(framesCache.get(frame - 1));
+            lastFrameRendered = frame;
+            label.repaint(); // On rafraîchit uniquement le label
+        }
     }
-}
-
-    // --- ÉVÉNEMENTS & SORTIE ---
 
     private void exitSequence() {
         state = "EXIT";
         hideHoverMenu();
-        label.setIcon(new ImageIcon("img/shime19.png")); // Tête triste
-        new Timer(1000, e -> System.exit(0)).start(); // Ferme après 1s
+        // On essaie de charger l'image de sortie
+        try { label.setIcon(new ImageIcon("img/shime19.png")); } catch(Exception e) {}
+        new Timer(1000, e -> System.exit(0)).start();
     }
 
     private void setupInteractions(JPanel cp) {
@@ -151,8 +136,6 @@ public class RaidenMini extends JFrame {
             }
         });
     }
-
-    // --- COMPORTEMENTS (MARCHE, DODO, ETC.) ---
 
     private int getSol() {
         int adj = switch(state) {
@@ -242,15 +225,14 @@ public class RaidenMini extends JFrame {
     }
 
     public static void main(String[] args) {
-    // Désactive l'accélération qui cache les images sur certaines cartes Linux
-    System.setProperty("sun.java2d.opengl", "false");
-    System.setProperty("sun.java2d.xrender", "false");
+        // Paramètres pour stabiliser Wayland/Hyprland
+        System.setProperty("sun.java2d.opengl", "false");
+        System.setProperty("sun.java2d.xrender", "false");
+        System.setProperty("sun.java2d.noddraw", "true");
 
-    SwingUtilities.invokeLater(() -> {
-        RaidenMini rm = new RaidenMini();
-        // Force la fenêtre à être "cliquable" et visible
-        rm.setVisible(true);
-        rm.repaint();
-    });
-}
+        SwingUtilities.invokeLater(() -> {
+            RaidenMini rm = new RaidenMini();
+            rm.getRootPane().putClientProperty("Window.shadow", Boolean.FALSE);
+        });
+    }
 }
