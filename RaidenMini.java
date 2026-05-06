@@ -24,13 +24,18 @@ public class RaidenMini extends JFrame {
         
         // Configuration de la fenêtre transparente
         setUndecorated(true);
-        setType(java.awt.Window.Type.UTILITY);
+        // Supprime toute autre ligne "setType" et garde celle-ci :
+        setType(java.awt.Window.Type.UTILITY); 
         setBackground(new Color(0, 0, 0, 0));
         setAlwaysOnTop(true);
         setSize(IMAGE_SIZE, IMAGE_SIZE);
         setLocationRelativeTo(null);
+        setTitle("RaidenMini");
         setIconImage(new ImageIcon("img/shime0.png").getImage());
         
+        ((JPanel)getContentPane()).setBackground(new Color(0, 0, 0, 0));
+        getContentPane().setLayout(new BorderLayout());
+
         // Anti-scintillement radical : On configure le rafraîchissement manuel
         getRootPane().setDoubleBuffered(true);
         ((JPanel)getContentPane()).setOpaque(false);
@@ -69,28 +74,33 @@ public class RaidenMini extends JFrame {
     // --- LOGIQUE D'AFFICHAGE & CACHE ---
 
     private void countImages() {
-        File dir = new File("img/");
-        if (dir.exists() && dir.isDirectory()) {
-            File[] files = dir.listFiles((d, name) -> name.startsWith("shime") && name.endsWith(".png"));
-            if (files != null) {
-                totalImages = files.length;
-                framesCache.clear();
-                // Mise en cache : On charge tout en RAM au démarrage
-                for (int i = 1; i <= totalImages; i++) {
-                    framesCache.add(new ImageIcon("img/shime" + i + ".png"));
-                }
+    File dir = new File("img/");
+    System.out.println("Recherche dans : " + dir.getAbsolutePath()); // Debug
+    if (dir.exists() && dir.isDirectory()) {
+        File[] files = dir.listFiles((d, name) -> name.startsWith("shime") && name.endsWith(".png"));
+        if (files != null) {
+            totalImages = files.length;
+            System.out.println("Images trouvées : " + totalImages); // Debug
+            framesCache.clear();
+            for (int i = 1; i <= totalImages; i++) {
+                framesCache.add(new ImageIcon("img/shime" + i + ".png"));
             }
         }
+    } else {
+        System.out.println("ERREUR : Dossier img/ introuvable !");
     }
+}
 
     private void updateUIFrame() {
-        if (frame > totalImages && totalImages > 0) frame = 1;
-        // Optimisation : On ne change l'icône que si la frame a réellement changé
-        if (frame != lastFrameRendered && !framesCache.isEmpty()) {
-            label.setIcon(framesCache.get(frame - 1));
-            lastFrameRendered = frame;
-        }
+    if (totalImages == 0) return; 
+    if (frame > totalImages) frame = 1;
+
+    if (frame != lastFrameRendered && !framesCache.isEmpty()) {
+        label.setIcon(framesCache.get(frame - 1));
+        lastFrameRendered = frame;
+        label.revalidate(); 
     }
+}
 
     // --- ÉVÉNEMENTS & SORTIE ---
 
