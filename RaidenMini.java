@@ -5,6 +5,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+/* RaidenMini - Mascotte de bureau interactive optimisée */
 public class RaidenMini extends JFrame {
     private int x, y, frame = 1, animStep = 0, totalImages = 0;
     private final int IMAGE_SIZE = 360, DECALAGE_SOL_BASE = 325;
@@ -21,13 +22,13 @@ public class RaidenMini extends JFrame {
         
         setUndecorated(true);
         setType(java.awt.Window.Type.UTILITY); 
+        // TEST : Si elle est toujours invisible, change (0,0,0,0) par (255,0,0,100) pour voir un carré rouge
         setBackground(new Color(0, 0, 0, 0));
         setAlwaysOnTop(true);
         setSize(IMAGE_SIZE, IMAGE_SIZE);
         setLocationRelativeTo(null);
         setTitle("RaidenMini");
         
-        // Configuration de la transparence
         ((JPanel)getContentPane()).setOpaque(false);
         getContentPane().setBackground(new Color(0, 0, 0, 0));
         getContentPane().setLayout(new BorderLayout());
@@ -44,20 +45,24 @@ public class RaidenMini extends JFrame {
         add(clickPanel);
 
         label = new JLabel();
+        label.setOpaque(false);
         label.setHorizontalAlignment(SwingConstants.CENTER);
         clickPanel.add(label, BorderLayout.CENTER);
 
         setupInteractions(clickPanel);
 
-        // --- IMPORTANT : Charger la première image AVANT d'afficher ---
+        // --- Diagnostic de chargement ---
+        if (totalImages > 0 && !framesCache.isEmpty()) {
+            label.setIcon(framesCache.get(0));
+            System.out.println("Image 1 injectée au démarrage.");
+        }
+
         updateUIFrame(); 
 
-        // Timer principal nettoyé
         new Timer(150, e -> { 
             if (!state.equals("EXIT")) {
                 applyLogic(); 
                 updateUIFrame(); 
-                // On ne remet PAS setVisible(true) ici !
             }
         }).start();
 
@@ -75,7 +80,10 @@ public class RaidenMini extends JFrame {
                 for (int i = 1; i <= totalImages; i++) {
                     framesCache.add(new ImageIcon("img/shime" + i + ".png"));
                 }
+                System.out.println("Images trouvées : " + totalImages);
             }
+        } else {
+            System.out.println("ERREUR : Dossier img/ introuvable !");
         }
     }
 
@@ -86,14 +94,13 @@ public class RaidenMini extends JFrame {
         if (frame != lastFrameRendered) {
             label.setIcon(framesCache.get(frame - 1));
             lastFrameRendered = frame;
-            label.repaint(); // On rafraîchit uniquement le label
+            label.repaint(); 
         }
     }
 
     private void exitSequence() {
         state = "EXIT";
         hideHoverMenu();
-        // On essaie de charger l'image de sortie
         try { label.setIcon(new ImageIcon("img/shime19.png")); } catch(Exception e) {}
         new Timer(1000, e -> System.exit(0)).start();
     }
@@ -225,14 +232,13 @@ public class RaidenMini extends JFrame {
     }
 
     public static void main(String[] args) {
-        // Paramètres pour stabiliser Wayland/Hyprland
+        // Paramètres de rendu pour Hyprland
+        System.setProperty("sun.java2d.xrender", "true");
         System.setProperty("sun.java2d.opengl", "false");
-        System.setProperty("sun.java2d.xrender", "false");
-        System.setProperty("sun.java2d.noddraw", "true");
 
         SwingUtilities.invokeLater(() -> {
             RaidenMini rm = new RaidenMini();
-            rm.getRootPane().putClientProperty("Window.shadow", Boolean.FALSE);
+            rm.setVisible(true);
         });
     }
 }
