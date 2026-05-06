@@ -94,15 +94,19 @@ public class RaidenMini extends JFrame {
     }
 
     private void updateUIFrame() {
-        if (totalImages == 0 || framesCache.isEmpty()) return; 
-        if (frame > totalImages) frame = 1;
+    if (totalImages == 0 || framesCache.isEmpty()) return; 
+    if (frame > totalImages) frame = 1;
 
-        if (frame != lastFrameRendered) {
-            label.setIcon(framesCache.get(frame - 1));
-            lastFrameRendered = frame;
-            label.repaint(); 
-        }
+    if (frame != lastFrameRendered) {
+        ImageIcon icon = framesCache.get(frame - 1);
+        
+        // On l'applique au label
+        label.setIcon(icon);
+        lastFrameRendered = frame;
+        
+        label.paintImmediately(0, 0, IMAGE_SIZE, IMAGE_SIZE); 
     }
+}
 
     private void exitSequence() {
         state = "EXIT";
@@ -241,6 +245,12 @@ public class RaidenMini extends JFrame {
     System.setProperty("sun.java2d.xrender", "true");
     System.setProperty("sun.java2d.opengl", "false");
 
+    try {
+        Runtime.getRuntime().exec("hyprctl keyword windowrule \"noborder, RaidenMini\"");
+        Runtime.getRuntime().exec("hyprctl keyword windowrule \"noshadow, RaidenMini\"");
+        Runtime.getRuntime().exec("hyprctl keyword windowrule \"blur, off, RaidenMini\"");
+    } catch (Exception e) {}
+    
     SwingUtilities.invokeLater(() -> {
         RaidenMini rm = new RaidenMini();
         // Optionnel : force encore un coup le "sans ombre"
