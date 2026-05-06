@@ -34,6 +34,7 @@ public class RaidenMini extends JFrame {
         setIconImage(new ImageIcon("img/shime0.png").getImage());
         
         ((JPanel)getContentPane()).setBackground(new Color(0, 0, 0, 0));
+        getContentPane().setBackground(new Color(0, 0, 0, 0));
         getContentPane().setLayout(new BorderLayout());
 
         // Anti-scintillement radical : On configure le rafraîchissement manuel
@@ -240,11 +241,14 @@ public class RaidenMini extends JFrame {
     }
 
     public static void main(String[] args) {
-    System.setProperty("sun.java2d.opengl", "true");
-    
+    // Désactive les pipelines qui bloquent la transparence sur Linux
+    System.setProperty("sun.java2d.opengl", "false");
+    System.setProperty("sun.java2d.xrender", "false");
+
     SwingUtilities.invokeLater(() -> {
         RaidenMini rm = new RaidenMini();
-        rm.getRootPane().putClientProperty("Window.shadow", Boolean.FALSE);
+        // Force le rafraîchissement de la transparence
+        rm.repaint(); 
     });
 }
 }
