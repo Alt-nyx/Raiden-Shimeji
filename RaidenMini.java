@@ -24,11 +24,11 @@ public class RaidenMini extends JFrame {
         
         // Configuration de la fenêtre transparente
         setUndecorated(true);
+        setType(java.awt.Window.Type.UTILITY);
         setBackground(new Color(0, 0, 0, 0));
         setAlwaysOnTop(true);
         setSize(IMAGE_SIZE, IMAGE_SIZE);
         setLocationRelativeTo(null);
-        setType(java.awt.Window.Type.NORMAL); 
         setIconImage(new ImageIcon("img/shime0.png").getImage());
         
         // Anti-scintillement radical : On configure le rafraîchissement manuel
@@ -55,13 +55,12 @@ public class RaidenMini extends JFrame {
 
         // Timer principal (Boucle de jeu)
         new Timer(150, e -> { 
-            if (!state.equals("EXIT")) {
-                applyLogic(); 
-                updateUIFrame();
-                // Force le dessin immédiat du label pour éviter le clignotement Linux
-                label.paintImmediately(0, 0, IMAGE_SIZE, IMAGE_SIZE);
-            }
-        }).start();
+    if (!state.equals("EXIT")) {
+        applyLogic(); 
+        updateUIFrame();
+        label.repaint();
+    }
+}).start();
 
         setVisible(true);
         x = getX(); y = getY();
