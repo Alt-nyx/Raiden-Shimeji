@@ -17,21 +17,26 @@ public class RaidenMini extends JFrame {
     private int lastFrameRendered = -1;
 
     public RaidenMini() {
+        // Indispensable pour la transparence sur certains systèmes Linux
+        JFrame.setDefaultLookAndFeelDecorated(false); 
+        
         setTitle("RaidenMini");
         countImages(); 
         
         setUndecorated(true);
         setType(java.awt.Window.Type.UTILITY); 
+        
+        // Configuration de la transparence réelle
         setBackground(new Color(0, 0, 0, 0));
         setAlwaysOnTop(true);
         setSize(IMAGE_SIZE, IMAGE_SIZE);
         setLocationRelativeTo(null);
+        setFocusableWindowState(false); // Évite de voler le focus
         
-        // --- OPTIMISATION ANTI-CLIGNOTEMENT ---
-        // On active le double buffering au niveau le plus profond
-        getRootPane().setDoubleBuffered(true);
         ((JPanel)getContentPane()).setOpaque(false);
-        ((JPanel)getContentPane()).setDoubleBuffered(true);
+        getContentPane().setBackground(new Color(0, 0, 0, 0));
+        getContentPane().setLayout(new BorderLayout());
+        getRootPane().setDoubleBuffered(true);
 
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
@@ -50,10 +55,6 @@ public class RaidenMini extends JFrame {
 
         setupInteractions(clickPanel);
 
-        if (totalImages > 0 && !framesCache.isEmpty()) {
-            label.setIcon(framesCache.get(0));
-        }
-
         updateUIFrame(); 
 
         new Timer(150, e -> { 
@@ -65,11 +66,13 @@ public class RaidenMini extends JFrame {
 
         setVisible(true);
         x = getX(); y = getY();
-        
-        // Petit fix pour Hyprland : forcer la fenêtre en mode "float" et sans bordure
+
+        // Correction Hyprland : On force la fenêtre à ne pas être opaque
         try {
             Runtime.getRuntime().exec("hyprctl keyword windowrule \"noborder, ^(RaidenMini)$\"");
             Runtime.getRuntime().exec("hyprctl keyword windowrule \"noshadow, ^(RaidenMini)$\"");
+            Runtime.getRuntime().exec("hyprctl keyword windowrule \"blur off, ^(RaidenMini)$\"");
+            Runtime.getRuntime().exec("hyprctl keyword windowrule \"opaque 0, ^(RaidenMini)$\"");
         } catch (Exception e) {}
     }
 
@@ -94,28 +97,20 @@ public class RaidenMini extends JFrame {
         if (frame != lastFrameRendered) {
             label.setIcon(framesCache.get(frame - 1));
             lastFrameRendered = frame;
-            
-            // --- FIX CRITIQUE : Rendu immédiat ---
-            // Au lieu de repaint() qui attend le bon vouloir du système,
-            // on force le dessin de la nouvelle frame instantanément.
+            // Force le dessin immédiat sans passer par la file d'attente système
             label.paintImmediately(0, 0, IMAGE_SIZE, IMAGE_SIZE);
         }
-    }
-
-    // --- Garde tes méthodes applyLogic, setupInteractions, etc. telles quelles ---
-    // (Je raccourcis ici pour la lisibilité, garde bien tes fonctions de mouvement)
-    private void exitSequence() {
-        state = "EXIT";
-        hideHoverMenu();
-        try { label.setIcon(new ImageIcon("img/shime19.png")); } catch(Exception e) {}
-        new Timer(1000, e -> System.exit(0)).start();
     }
 
     private void setupInteractions(JPanel cp) {
         cp.addMouseListener(new MouseAdapter() {
             @Override public void mouseEntered(MouseEvent e) { showHoverMenu(); }
+            @Override public void mouseExited(MouseEvent e) {
+                new Timer(200, evt -> { if (!isMouseOverMenu() && !isMouseOverRaiden()) hideHoverMenu(); }).start();
+            }
             @Override public void mousePressed(MouseEvent e) {
                 if (SwingUtilities.isLeftMouseButton(e)) {
+                    if (state.equals("FALL") || state.equals("EXIT")) return;
                     isDragging = true; hasMoved = false; hideHoverMenu();
                 }
             }
@@ -128,6 +123,7 @@ public class RaidenMini extends JFrame {
                 }
             }
         });
+
         cp.addMouseMotionListener(new MouseAdapter() {
             @Override public void mouseDragged(MouseEvent e) {
                 if (isDragging) {
@@ -159,6 +155,7 @@ public class RaidenMini extends JFrame {
             setLocation(x, y); return;
         }
         y = sol; setLocation(x, y); animStep++;
+
         switch (state) {
             case "MARCHE" -> {
                 x -= 12; frame = ((animStep / 6) % 2 == 0) ? 2 : 3; 
@@ -190,14 +187,18 @@ public class RaidenMini extends JFrame {
         if (!menuButtons.isEmpty() || state.equals("EXIT")) return;
         String[] modes = {"DODO", "SUCETTE", "ASSISE", "MARCHE"};
         String[] icons = {"img/sleep-icon.png", "img/sucette-icon.png", "img/assis-icon.png", "img/walk-icon.png"};
+        
         for (int i = 0; i < modes.length; i++) {
             final String cible = modes[i];
             JWindow btn = new JWindow();
             btn.setBackground(new Color(0, 0, 0, 0));
             double angle = Math.toRadians(-128 + (i * 25)); 
             btn.setLocation(getX()+180 + (int)(Math.cos(angle)*150)-25, getY()+180 + (int)(Math.sin(angle)*145)-25);
+
             JLabel l = new JLabel(new ImageIcon(new ImageIcon(icons[i]).getImage().getScaledInstance(32, 32, Image.SCALE_SMOOTH)));
             btn.add(l); btn.setSize(50, 50); btn.setAlwaysOnTop(true); btn.setVisible(true);
+            btn.toFront(); // Force le menu devant Raiden
+            
             l.addMouseListener(new MouseAdapter() {
                 @Override public void mousePressed(MouseEvent e) {
                     targetState = cible;
@@ -224,17 +225,24 @@ public class RaidenMini extends JFrame {
         };
     }
 
+    private void exitSequence() {
+        state = "EXIT";
+        hideHoverMenu();
+        try { label.setIcon(new ImageIcon("img/shime19.png")); } catch(Exception e) {}
+        new Timer(1000, e -> System.exit(0)).start();
+    }
+
     public static void main(String[] args) {
-        // --- CONFIGURATION DU MOTEUR DE RENDU ---
-        // Sous Linux/Wayland, OpenGL est souvent plus stable pour éviter le clignotement
-        System.setProperty("sun.java2d.opengl", "true");
-        System.setProperty("sun.java2d.xrender", "false");
-        
+        // Désactivation OpenGL (qui casse souvent la transparence sur Wayland)
+        System.setProperty("sun.java2d.opengl", "false");
+        // Activation XRender pour une meilleure gestion des fenêtres transparentes
+        System.setProperty("sun.java2d.xrender", "true");
         // Empêche Java d'essayer d'effacer le fond de la fenêtre
         System.setProperty("sun.java2d.noddraw", "true");
 
         SwingUtilities.invokeLater(() -> {
             RaidenMini rm = new RaidenMini();
+            rm.setOpacity(1.0f); // Force l'opacité au niveau OS (requis pour le fond transparent)
             rm.setVisible(true);
         });
     }
