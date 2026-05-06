@@ -111,11 +111,6 @@ public class RaidenMini extends JFrame {
             }
         });
 
-        JPanel clickPanel = new JPanel(new BorderLayout());
-        clickPanel.setOpaque(false);
-        clickPanel.setDoubleBuffered(true);
-        add(clickPanel);
-
         new Timer(150, e -> { 
             if (!state.equals("EXIT")) { // On stop la logique si elle est en train de partir
                 applyLogic(); 
